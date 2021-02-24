@@ -183,3 +183,12 @@ impl Grid {
         }
     }
 }
+
+fn bca(rv: &usize, vta: i32, ub: &usize) -> usize {
+    let r = (*rv).checked_add(vta as usize).unwrap_or(*rv);
+    if r < *ub {
+        r
+    } else {
+        *rv
+    }
+}
