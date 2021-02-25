@@ -6,7 +6,7 @@ use crate::rover_commands::Action;
 pub struct Rover {
     pub x: usize,
     pub y: usize,
-    pub direction: char,
+    pub direction: Direction,
 }
 
 #[derive(Debug)]
@@ -18,15 +18,56 @@ pub struct Grid {
     pub current: usize,     // ID of the current rover Move commands will be executed against
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+#[repr(u8)]
+pub enum Direction {
+    North = b'N',
+    East = b'E',
+    South = b'S',
+    West = b'W',
+}
+
+impl From<char> for Direction {
+    fn from(c: char) -> Self {
+        match c {
+            'N' => Self::North,
+            'E' => Self::East,
+            'S' => Self::South,
+            'W' => Self::West,
+            _ => panic!("Unknown Type"),
+        }
+    }
+}
+
+impl std::str::FromStr for Direction {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Direction::from(s.chars().nth(0).unwrap()))
+    }
+}
+
+impl Into<char> for Direction {
+    fn into(self) -> char {
+        self as u8 as char
+    }
+}
+
+impl fmt::Display for Direction {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let c: char = (*self).into();
+        write!(f, "{}", c)
+    }
+}
+
 #[derive(Debug)]
 pub enum Errors {
     RoverAlreadyPresent,
     NonExistantDirection,
-    OffGrid,
+    OffGrid(i32, i32),
 }
 
 const ZERO: usize = 0;
-pub const ALLOWED_DIRECTIONS: &'static str = "LR";
 
 impl fmt::Display for Rover {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -65,12 +106,12 @@ impl Grid {
 
     pub fn new_rover(&mut self, x: usize, y: usize, direction: char) -> Result<(), Errors> {
         if self.not_within_bounds(&x, &y) {
-            Err(Errors::OffGrid)
+            Err(Errors::OffGrid(x as i32, y as i32))
         } else if self.can_set_at_destination(&x, &y) {
             self.rovers.push(Rover {
                 x: x.clone(),
                 y: y.clone(),
-                direction: direction,
+                direction: direction.into(),
             });
 
             self.set_rover_at(x, y, self.rovers.len());
@@ -81,17 +122,17 @@ impl Grid {
         }
     }
 
-    pub fn change_current_rover_direction(&mut self, new_direction: &Action) -> Result<(), Errors> {
+    pub fn change_current_rover_direction(&mut self, new_direction: Action) -> Result<(), Errors> {
         let mut rover = self.rovers.get_mut(self.current - 1).unwrap();
         rover.direction = match (&rover.direction, new_direction) {
-            ('N', Action::Left) => 'W',
-            ('N', Action::Right) => 'E',
-            ('E', Action::Left) => 'N',
-            ('E', Action::Right) => 'S',
-            ('S', Action::Left) => 'E',
-            ('S', Action::Right) => 'W',
-            ('W', Action::Left) => 'S',
-            ('W', Action::Right) => 'N',
+            (Direction::North, Action::Left) => Direction::West,
+            (Direction::North, Action::Right) => Direction::East,
+            (Direction::East, Action::Left) => Direction::North,
+            (Direction::East, Action::Right) => Direction::South,
+            (Direction::South, Action::Left) => Direction::East,
+            (Direction::South, Action::Right) => Direction::West,
+            (Direction::West, Action::Left) => Direction::South,
+            (Direction::West, Action::Right) => Direction::North,
             (_, _) => return Err(Errors::NonExistantDirection),
         };
         Ok(())
@@ -101,19 +142,15 @@ impl Grid {
         let mut rover = self.rovers.pop().unwrap();
 
         let (x, y) = match &rover.direction {
-            'N' => (rover.x, rover.y + 1),
-            'E' => (rover.x + 1, rover.y),
-            'S' => (rover.x, rover.y - 1),
-            'W' => (rover.x - 1, rover.y),
-            _ => {
-                self.rovers.push(rover);
-                return Err(Errors::NonExistantDirection);
-            }
+            Direction::North => (rover.x, rover.y + 1),
+            Direction::East => (rover.x + 1, rover.y),
+            Direction::South => (rover.x, rover.y - 1),
+            Direction::West => (rover.x - 1, rover.y),
         };
 
         if self.not_within_bounds(&x, &y) {
             self.rovers.push(rover);
-            Err(Errors::OffGrid)
+            Err(Errors::OffGrid(x as i32, y as i32))
         } else if self.can_set_at_destination(&x, &y) {
             self.remove_rover_at(rover.x, rover.y);
             self.set_rover_at(x, y, self.current);
