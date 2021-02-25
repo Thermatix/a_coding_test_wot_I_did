@@ -1,5 +1,7 @@
 use std::fmt;
 
+use crate::rover_commands::Action;
+
 #[derive(Debug)]
 pub struct Rover {
     pub x: usize,
@@ -79,46 +81,20 @@ impl Grid {
         }
     }
 
-    pub fn change_current_rover_direction(&mut self, new_direction: char) -> Result<(), Errors> {
-        if ALLOWED_DIRECTIONS.contains(new_direction) {
-            let mut rover = self.rovers.get_mut(self.current - 1).unwrap();
-            rover.direction = match &rover.direction {
-                'N' => {
-                    if new_direction == 'L' {
-                        'W'
-                    } else {
-                        'E'
-                    }
-                }
-                'E' => {
-                    if new_direction == 'L' {
-                        'N'
-                    } else {
-                        'S'
-                    }
-                }
-                'S' => {
-                    if new_direction == 'L' {
-                        'E'
-                    } else {
-                        'W'
-                    }
-                }
-                'W' => {
-                    if new_direction == 'L' {
-                        'S'
-                    } else {
-                        'N'
-                    }
-                }
-                _ => {
-                    return Err(Errors::NonExistantDirection);
-                }
-            };
-            Ok(())
-        } else {
-            Err(Errors::NonExistantDirection)
-        }
+    pub fn change_current_rover_direction(&mut self, new_direction: &Action) -> Result<(), Errors> {
+        let mut rover = self.rovers.get_mut(self.current - 1).unwrap();
+        rover.direction = match (&rover.direction, new_direction) {
+            ('N', Action::Left) => 'W',
+            ('N', Action::Right) => 'E',
+            ('E', Action::Left) => 'N',
+            ('E', Action::Right) => 'S',
+            ('S', Action::Left) => 'E',
+            ('S', Action::Right) => 'W',
+            ('W', Action::Left) => 'S',
+            ('W', Action::Right) => 'N',
+            (_, _) => return Err(Errors::NonExistantDirection),
+        };
+        Ok(())
     }
 
     pub fn move_current_rover(&mut self) -> Result<(), Errors> {

@@ -10,7 +10,40 @@ const LAST: usize = 4;
 pub enum RoverCommand {
     GridSize { x: usize, y: usize },
     StartAt { x: usize, y: usize, direction: char },
-    Move { actions: String },
+    Move { actions: Vec<Action> },
+}
+
+#[derive(Debug, Clone, Copy)]
+#[repr(u8)]
+pub enum Action {
+    Left = b'L',
+    Right = b'R',
+    Move = b'M',
+}
+
+impl From<char> for Action {
+    fn from(c: char) -> Self {
+        match c {
+            'L' => Self::Left,
+            'R' => Self::Right,
+            'M' => Self::Move,
+            _ => panic!("Unknown Type"),
+        }
+    }
+}
+
+impl std::str::FromStr for Action {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Action::from(s.chars().nth(0).unwrap()))
+    }
+}
+
+impl Into<char> for Action {
+    fn into(self) -> char {
+        self as u8 as char
+    }
 }
 
 #[derive(Debug)]
@@ -38,18 +71,22 @@ impl RoverCommand {
 
                 match grid {
                     Some(mut grid) => {
-                        for a in actions.chars().into_iter() {
-                            if data::ALLOWED_DIRECTIONS.contains(a) {
-                                match grid.change_current_rover_direction(a) {
-                                    Err(e) => errors.push(e),
-                                    _ => (),
-                                };
-                            } else {
-                                match grid.move_current_rover() {
-                                    Err(e) => errors.push(e),
-                                    _ => (),
-                                };
-                            }
+                        for a in actions.into_iter() {
+                            match a {
+                                Action::Move => {
+                                    match grid.move_current_rover() {
+                                        Err(e) => errors.push(e),
+                                        _ => (),
+                                    };
+                                }
+
+                                Action::Left | Action::Right => {
+                                    match grid.change_current_rover_direction(a) {
+                                        Err(e) => errors.push(e),
+                                        _ => (),
+                                    };
+                                }
+                            };
                         }
 
                         match errors.into_iter().next() {
@@ -103,7 +140,9 @@ impl From<String> for RoverCommand {
                 }
             }
         } else {
-            Self::Move { actions: line }
+            Self::Move {
+                actions: line.chars().map(|c| c.into()).collect::<Vec<Action>>(),
+            }
         }
     }
 }
