@@ -55,7 +55,7 @@ pub enum Errors {
 type ExecutionResult = Result<Option<Grid>, Errors>;
 impl RoverCommand {
     // Never orignally intended for the function to take ownership
-    // but doing this way just works
+    // but doing it this way just works cleanly with it's intended usage
     pub fn execute(&self, grid: Option<Grid>) -> ExecutionResult {
         match self {
             Self::GridSize { x, y } => Ok(Some(Grid::new(*x, *y))),

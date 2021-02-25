@@ -28,16 +28,6 @@ with the max bounds of the grid.
 
 The provided test case is in the `rover.commands` file.
 
-## Bugs
+## Issues
 
-### No error reporting
-
-Because of some difficulty there is no reporting of any internal errors
-The executable will however still panic in certain uncovered issues
-
-### less then zero bounds
-
-Whilst it's not possible to go beyond the max grid size bounds it's possible to go under,
-this will however cause an over flow **panic**. 
-It is because I couldn't figure out the rust idiomatic way to handle going below zero for
-**unsized** value types when adding a negative number.
+Entering Malformed instructions will crash the app

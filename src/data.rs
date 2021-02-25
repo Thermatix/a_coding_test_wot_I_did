@@ -144,13 +144,13 @@ impl Grid {
         let (x, y) = match &rover.direction {
             Direction::North => (rover.x, rover.y + 1),
             Direction::East => (rover.x + 1, rover.y),
-            Direction::South => (rover.x, rover.y - 1),
-            Direction::West => (rover.x - 1, rover.y),
+            Direction::South => (rover.x, rover.y.checked_sub(1).unwrap_or(rover.y)),
+            Direction::West => (rover.x.checked_sub(1).unwrap_or(rover.x), rover.y),
         };
 
         if self.not_within_bounds(&x, &y) {
             self.rovers.push(rover);
-            Err(Errors::OffGrid(x as i32, y as i32))
+            Ok(())
         } else if self.can_set_at_destination(&x, &y) {
             self.remove_rover_at(rover.x, rover.y);
             self.set_rover_at(x, y, self.current);
@@ -194,14 +194,5 @@ impl Grid {
             None => true,
             Some(_) => false,
         }
-    }
-}
-
-fn bca(rv: &usize, vta: i32, ub: &usize) -> usize {
-    let r = (*rv).checked_add(vta as usize).unwrap_or(*rv);
-    if r < *ub {
-        r
-    } else {
-        *rv
     }
 }
