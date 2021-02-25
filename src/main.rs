@@ -14,6 +14,11 @@ fn main() -> Result<(), rover_commands::Errors> {
 
     let inputed_commands: String = input::get_commands();
 
+    if inputed_commands == "" {
+        println!("Empty Input!");
+        return Ok(());
+    }
+
     let rover_commands: Vec<RoverCommand> = inputed_commands
         .lines()
         .map(|line| line.to_string().into())
