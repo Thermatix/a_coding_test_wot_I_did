@@ -81,7 +81,7 @@ impl RoverCommand {
                                 }
 
                                 Action::Left | Action::Right => {
-                                    match grid.change_current_rover_direction(a) {
+                                    match grid.change_current_rover_direction(*a) {
                                         Err(e) => errors.push(e),
                                         _ => (),
                                     };

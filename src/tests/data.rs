@@ -1,4 +1,5 @@
 use crate::data::*;
+use crate::rover_commands::Action;
 use std::matches;
 
 #[test]
@@ -47,12 +48,12 @@ fn test_if_grid_cant_add_rover_to_out_of_bounds() {
 
     assert!(matches!(
         grid.new_rover(x + 1 as usize, y, 'N'),
-        Err(Errors::OffGrid)
+        Err(Errors::OffGrid(x, y))
     ));
 
     assert!(matches!(
         grid.new_rover(x, y + 1 as usize, 'N'),
-        Err(Errors::OffGrid)
+        Err(Errors::OffGrid(x, y))
     ));
 }
 
@@ -63,12 +64,12 @@ fn test_if_grid_can_move_rover() {
     let x: usize = 1;
 
     grid.new_rover(x.clone(), y.clone(), 'N');
-    assert_eq!(grid.get_rover_at(&x, &y).unwrap().direction, 'N');
+    assert_eq!(grid.get_rover_at(&x, &y).unwrap().direction, 'N'.into());
     grid.move_current_rover();
     assert!(matches!(grid.get_rover_at(&x, &y), None));
     assert_eq!(
         grid.get_rover_at(&x, &(y + 1 as usize)).unwrap().direction,
-        'N'
+        'N'.into()
     );
 }
 
@@ -82,10 +83,10 @@ fn test_if_grid_can_change_rover_direction() {
     grid.move_current_rover();
     assert!(matches!(grid.get_rover_at(&x, &y), None));
     y = y + 1;
-    assert_eq!(grid.get_rover_at(&x, &y).unwrap().direction, 'N');
-    grid.change_current_rover_direction('R');
-    assert_eq!(grid.get_rover_at(&x, &y).unwrap().direction, 'E');
+    assert_eq!(grid.get_rover_at(&x, &y).unwrap().direction, 'N'.into());
+    grid.change_current_rover_direction(Action::from('R'));
+    assert_eq!(grid.get_rover_at(&x, &y).unwrap().direction, 'E'.into());
     grid.move_current_rover();
     x = x + 1;
-    assert_eq!(grid.get_rover_at(&x, &y).unwrap().direction, 'E');
+    assert_eq!(grid.get_rover_at(&x, &y).unwrap().direction, 'E'.into());
 }
